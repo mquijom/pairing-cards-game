@@ -7,9 +7,13 @@
     "build": "vue-cli-service build"
   },
   "dependencies": {
+    "axios": "^0.18.0",
+    "material-design-icons-iconfont": "^4.0.4",
     "register-service-worker": "^1.5.2",
+    "roboto-fontface": "^0.10.0",
     "vue": "^2.5.21",
     "vue-router": "^3.0.1",
+    "vuetify": "^1.4.2",
     "vuex": "^3.0.1"
   },
   "devDependencies": {
@@ -17,6 +21,8 @@
     "@vue/cli-plugin-pwa": "^3.3.0",
     "@vue/cli-service": "^3.3.0",
     "node-sass": "^4.9.0",
+    "stylus": "^0.54.5",
+    "stylus-loader": "^3.0.1",
     "sass-loader": "^7.0.1",
     "vue-template-compiler": "^2.5.21"
   }
