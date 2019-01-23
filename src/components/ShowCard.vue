@@ -13,7 +13,7 @@
                 <img :src="selected_card.image_url">
             </v-card-text>
             <v-card-actions>
-                <v-btn color="success" @click="draw()">Draw</v-btn>
+                <v-btn color="success" :disabled="players_turn!==$store.state.user.name" @click="draw()">Draw</v-btn>
                 <v-spacer></v-spacer>
                 <v-btn color="error" @click="cancel()">Cancel</v-btn>
             </v-card-actions>
@@ -30,6 +30,9 @@ export default {
     },
     selected_card: {
       type: Object
+    },
+    players_turn: {
+      type: String
     }
   },
   methods: {

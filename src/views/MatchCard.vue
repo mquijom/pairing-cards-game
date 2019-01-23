@@ -10,10 +10,15 @@
             </v-progress-circular>
             <v-card v-show="!loading">
                 <v-card-title>
-                    <span class="display-2">My Deck</span>
                     <div>
-                      <span v-if="players_turn===user.name">Your turn</span>
-                      <span v-else>{{players_turn}}'s turn</span>
+                      <span class="display-2" v-if="players_turn===user.name">Your turn</span>
+                      <span class="display-2" v-else-if="players_turn">{{players_turn}}'s turn</span>
+                      <!-- <v-btn color="info" @click="shuffle" flat icon>
+                        <v-icon>shuffle</v-icon>
+                      </v-btn> -->
+                      <v-btn color="success" icon flat @click="startPolling()">
+                        <v-icon>refresh</v-icon>
+                      </v-btn>
                     </div>
                     <v-spacer></v-spacer>
                     <span class="subheading">Login as: {{user.name}}</span>
@@ -25,15 +30,23 @@
                 <v-card-text>
                     <v-layout row wrap>
                         <v-flex v-for="card in cards" v-bind="{ [`xs${cards.length > 6 ? 1 : cards.length > 4 ? 2 : 3}`]: true }" :key="card">
-                            <img :src="card.image_url" @click="openCard(card)">
+                            <v-hover>
+                              <img 
+                                slot-scope="{ hover }" 
+                                :class="`elevation-${hover ? 24 : 2}`" 
+                                :src="card.image_url" 
+                                v-show="!hide"
+                                @click="openCard(card)">
+                            </v-hover>
                         </v-flex>
                     </v-layout>
-                    <show-card :show="pick_card" :selected_card="selected_card" @draw="draw()" @cancel="cancel()"></show-card>
+                    <show-card :show="pick_card" :players_turn="players_turn" :selected_card="selected_card" @draw="draw()" @cancel="cancel()"></show-card>
                     <hidden-card :show="show_hidden_card" :hidden_card="hidden_card" @close="close()"></hidden-card>
                     <new-game :show="show_create_game" @exit="exit()"></new-game>
                 </v-card-text>
                 <v-card-actions>
                     <v-btn color="success" block @click="pair()">Pair</v-btn>
+                    <v-btn color="info" block @click="hide=!hide">{{hide?'Show':'Hide'}}</v-btn>
                 </v-card-actions>
             </v-card>
         </v-flex>
@@ -58,38 +71,39 @@ export default {
     show_create_game: false,
     polling: null,
     players_turn: "",
-    poll_interval: 1000
+    poll_interval: 1000,
+    hide: false
   }),
   created() {
     this.init();
   },
-  watch: {
-    pick_card(val) {
-      if (val) {
-        clearInterval(this.polling);
-      } else {
-        this.startPolling();
-      }
-    }
-  },
+  // watch: {
+  //   pick_card(val) {
+  //     if (val) {
+  //       clearInterval(this.polling);
+  //     } else {
+  //       this.startPolling();
+  //     }
+  //   }
+  // },
   methods: {
     startPolling() {
-      this.polling = setInterval(() => {
-        this.loadCards(() => {
-          this.$http
-            .get("api/cards/isturn/" + this.user.id)
-            .then(result => {
-              //   return result.data.isTurn;
-              console.log(JSON.stringify(result.data));
-              this.players_turn = result.data.players_turn;
-              this.poll_interval = 3000;
-            })
-            .catch(err => {
-              console.log(err);
-              //   return false;
-            });
-        });
-      }, this.poll_interval);
+      // this.polling = setInterval(() => {
+      this.loadCards(() => {
+        this.$http
+          .get("api/cards/isturn/" + this.user.id)
+          .then(result => {
+            //   return result.data.isTurn;
+            console.log(JSON.stringify(result.data));
+            this.players_turn = result.data.players_turn;
+            // this.poll_interval = 10000;
+          })
+          .catch(err => {
+            console.log(err);
+            //   return false;
+          });
+      });
+      // }, this.poll_interval);
     },
     init() {
       this.loading = true;
@@ -104,8 +118,8 @@ export default {
       this.$http
         .get("api/cards/" + this.user.id)
         .then(result => {
-          // console.log("card: " + JSON.stringify(result.data));
-          this.cards = result.data.model.current_game.cards;
+          console.log("card: " + JSON.stringify(result.data));
+          this.cards = result.data.cards;
           cb();
         })
         .catch(err => {
@@ -157,6 +171,23 @@ export default {
     exit() {
       this.$router.push("/");
     },
+    // shuffle() {
+    //   var currentIndex = this.cards.length,
+    //     temporaryValue,
+    //     randomIndex;
+
+    //   // While there remain elements to shuffle...
+    //   while (0 !== currentIndex) {
+    //     // Pick a remaining element...
+    //     randomIndex = Math.floor(Math.random() * currentIndex);
+    //     currentIndex--;
+
+    //     // And swap it with the current element.
+    //     temporaryValue = this.cards[currentIndex];
+    //     this.cards[currentIndex] = cards[randomIndex];
+    //     this.cards[randomIndex] = temporaryValue;
+    //   }
+    // },
     draw() {
       this.loading = true;
       this.pick_card = false;
@@ -172,6 +203,7 @@ export default {
           this.cancel();
           this.loadCards(() => {
             this.loading = false;
+            this.startPolling();
           });
         })
         .catch(err => {
